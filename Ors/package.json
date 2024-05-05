@@ -1,0 +1,15 @@
+{
+  "name": "ors",
+  "version": "1.0.0",
+  "description": "map app",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "author": "ctudel",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "openrouteservice-js": "^0.3.2"
+  }
+}
