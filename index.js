@@ -1,3 +1,20 @@
+function reverseGeocode(lat, lng) {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
+
+    return fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const address = data.display_name;
+            return address.split(',')[1]; // Use only the first part of the display name as the relative name
+        })
+        .catch(error => {
+            console.error('Error fetching reverse geocoding data:', error);
+            return null;
+        });
+}
+
+
+
 let marker, circle, zoomed;
 
 function success(pos) {
@@ -37,24 +54,6 @@ function error(err){
     } else {
         alert("Error: cannot retrieve current location");
     }
-}
-
-
-
-
-function reverseGeocode(lat, lng) {
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
-
-    return fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            const address = data.display_name;
-            return address.split(',')[0]; // Use only the first part of the display name as the relative name
-        })
-        .catch(error => {
-            console.error('Error fetching reverse geocoding data:', error);
-            return null;
-        });
 }
 
 
@@ -127,48 +126,6 @@ async function geocode(location) {
     }
 }
 
-// function planTravel() {
-//     const start = markers['start'] ? markers['start'].getLatLng() : null;
-//     const end = markers['end'] ? markers['end'].getLatLng() : null;
-//     const arrivalTimeStr = document.getElementById('time').value.trim();
-
-//     if (!start || !end || !arrivalTimeStr) {
-//         alert('Please select both a start and end location, and enter an arrival time.');
-//         return;
-//     }
-
-//     const arrivalTime = new Date(`2000-01-01T${arrivalTimeStr}:00`);
-//     if (isNaN(arrivalTime.getTime())) {
-//         alert('Invalid arrival time format. Please use HH:mm format.');
-//         return;
-//     }
-
-
-//     L.Routing.control({
-
-//         waypoints: [
-//             L.latLng(start.lat, start.lng),
-//             L.latLng(end.lat, end.lng)
-//         ],
-//         routeWhileDragging: true,
-//         show: false
-
-//     }).on('routesfound', function(e) {
-
-//         const routes = e.routes;
-//         if (routes && routes.length > 0) {
-//             const route = routes[0];
-//             const travelTimeInSeconds = route.summary.totalTime;
-
-//             const leaveTime = new Date(arrivalTime.getTime() - (travelTimeInSeconds * 1000));
-//             const leaveTimeFormatted = leaveTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
-
-//             alert(`You should leave at ${leaveTimeFormatted} to arrive at ${arrivalTimeStr}`);
-//         }
-
-//     }).addTo(map);
-// }
-
 
 function planTravel() {
     const start = markers['start'] ? markers['start'].getLatLng() : null;
@@ -199,7 +156,7 @@ function planTravel() {
             const route = routes[0];
             const travelTimeInSeconds = route.summary.totalTime;
 
-            const leaveTime = new Date(arrivalTime.getTime() - (travelTimeInSeconds * 1000));
+            const leaveTime = new Date(arrivalTime.getTime() - (travelTimeInSeconds * 1200));
             const leaveTimeFormatted = leaveTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
 
             alert(`You should leave at ${leaveTimeFormatted} to arrive at ${arrivalTimeStr}`);
