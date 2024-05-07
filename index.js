@@ -170,7 +170,7 @@ async function geocode(location) {
 // }
 
 
-async function planTravel() {
+function planTravel() {
     const start = markers['start'] ? markers['start'].getLatLng() : null;
     const end = markers['end'] ? markers['end'].getLatLng() : null;
     const arrivalTimeStr = document.getElementById('time').value.trim();
@@ -182,78 +182,55 @@ async function planTravel() {
 
     const arrivalTime = parseTime(arrivalTimeStr);
     if (!arrivalTime) {
-        alert('Invalid arrival time format. Please use HH:mm format.');
+        alert('Invalid arrival time format. Please use HH:mm:Period format.');
         return;
     }
 
-    try {
-        const estimatedTravelTime = await calculateEstimatedTravelTime(start, end);
-        console.log(estimatedTravelTime % 60);
+    L.Routing.control({
+        waypoints: [
+            L.latLng(start.lat, start.lng),
+            L.latLng(end.lat, end.lng)
+        ],
+        routeWhileDragging: true,
+        show: false
+    }).on('routesfound', function(e) {
+        const routes = e.routes;
+        if (routes && routes.length > 0) {
+            const route = routes[0];
+            const travelTimeInSeconds = route.summary.totalTime;
 
-        const leaveTime = getLeaveTime(arrivalTime, estimatedTravelTime);
-        const leaveTimeFormatted = leaveTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+            const leaveTime = new Date(arrivalTime.getTime() - (travelTimeInSeconds * 1000));
+            const leaveTimeFormatted = leaveTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
 
-        alert(`You should leave at ${leaveTimeFormatted} to arrive at ${arrivalTimeStr}`);
-    } catch (error) {
-        console.error('Error calculating estimated travel time:', error);
-        alert('Could not calculate estimated travel time.');
-    }
+            alert(`You should leave at ${leaveTimeFormatted} to arrive at ${arrivalTimeStr}`);
+        }
+    }).addTo(map);
 }
 
 
-/* Calculate the estimated travel time between start and end locations */
-function calculateEstimatedTravelTime(start, end) {
-    return new Promise((resolve, reject) => {
-        L.Routing.control({
-            waypoints: [
-                L.latLng(start.lat, start.lng),
-                L.latLng(end.lat, end.lng)
-            ],
-            routeWhileDragging: true,
-            show: false
-        }).on('routesfound', function(e) {
-            const routes = e.routes;
-            if (routes && routes.length > 0) {
-                const route = routes[0];
-                const travelTimeInSeconds = route.summary.totalTime;
-                resolve(travelTimeInSeconds);
-            } else {
-                reject(new Error('No routes found'));
-            }
-        }).addTo(map);
-    });
-}
-
-
-/* Calculate time user should leave */
-function getLeaveTime(arrivalTime, estimatedTravelTime) {
-    const hours = arrivalTime.hours % 12 + (arrivalTime.period === 'PM' ? 12 : 0);
-    const leaveTime = new Date();
-    leaveTime.setHours(hours, arrivalTime.minutes - estimatedTravelTime, 0);
-    console.log(leaveTime);
-
-    return leaveTime;
-}
-
-/* Parse user time input */
 function parseTime(timeString) {
-    const regex = /^(\d{1,2}):(\d{2})\s?(AM|PM)?$/i;
+    const regex = /^(\d{1,2}):(\d{2})(\w{2})$/i;
     const match = timeString.match(regex);
     if (!match) {
         return null;
     }
 
-    const hours = parseInt(match[1], 10);
+    let hours = parseInt(match[1], 10);
     const minutes = parseInt(match[2], 10);
-    const period = match[3] ? match[3].toUpperCase() : 'AM';
+    const period = match[3].toUpperCase();
 
-    if (hours < 0 || hours > 12 || minutes < 0 || minutes > 59 || (hours === 12 && period === 'AM')) {
+    if (hours === 12) {
+        hours = period === 'AM' ? 0 : 12;
+    } else {
+        hours = period === 'PM' ? hours + 12 : hours;
+    }
+
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
         return null;
     }
 
-    return { hours, minutes, period };
+    return new Date(2000, 0, 1, hours, minutes);
 }
-
 
 
 
