@@ -1,6 +1,6 @@
 let marker, circle, zoomed, routingControl;
 
-
+/* Resets map interface */
 function resetMap() {
     if (routingControl) {
         map.removeControl(routingControl);
@@ -17,7 +17,7 @@ function resetMap() {
 
 }
 
-
+/* Finds an address based on latitude and longtitude */
 function reverseGeocode(lat, lng) {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
 
@@ -33,7 +33,7 @@ function reverseGeocode(lat, lng) {
         });
 }
 
-
+/* Locates the user's current position if successfully found */
 function success(pos) {
     const lat = pos.coords.latitude;
     const lng = pos.coords.longitude;
@@ -68,6 +68,11 @@ function success(pos) {
 }
 
 
+/* 
+ * Place a marker on the map given latitude and longtitude.
+ * param 'type' is the key value used for storing a marker in the
+ *      markers array
+ */
 function placeMarker(type, lat, lng) {
 
     // Remove old markers if any
@@ -87,6 +92,7 @@ function placeMarker(type, lat, lng) {
 }
 
 
+/* Removes a marker from the map */
 function removeMarker(type) {
     if (markers[type]) {
         map.removeLayer(markers[type]);
@@ -95,12 +101,14 @@ function removeMarker(type) {
 }
 
 
-function addLocation(e) {
+/* Places a marker wherever a user clicks on the map */
+function placeMarkerAtCursor(e) {
     const lat = e.latlng.lat;
     const lng = e.latlng.lng;
     const startInput = document.getElementById('start');
     const endInput = document.getElementById('end');
 
+    // Validate start address does not exist
     if (startInput.value === '' || startInput.value === ' ') {
         placeMarker('start', lat, lng);
 
@@ -111,6 +119,7 @@ function addLocation(e) {
                 }
             });
 
+    // Validate end target address does not exist
     } else if (endInput.value === '' || endInput.value === ' ') {
         placeMarker('end', lat, lng);
 
@@ -121,10 +130,12 @@ function addLocation(e) {
                 }
             });
 
+    // Otherwise, log and do nothing
     } else { console.log("Could not place marker, necessary locations exist"); }
 }
 
 
+/* Retrieves the coordinates given an address */
 async function geocode(location) {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${location}`;
 
@@ -145,10 +156,12 @@ async function geocode(location) {
 }
 
 
+/* An attempt to autocomplete an address while the user is typing */
 function autocomplete(inputId, datalistId) {
     const input = document.getElementById(inputId);
     const datalist = document.getElementById(datalistId);
 
+    // Listen for user input event
     input.addEventListener('input', async function() {
         const query = input.value;
 
@@ -157,6 +170,7 @@ function autocomplete(inputId, datalistId) {
             return;
         }
 
+        // Fetch nominatim API and create autocomplete option list
         const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=json`;
         try {
             const response = await fetch(url);
@@ -176,6 +190,7 @@ function autocomplete(inputId, datalistId) {
 }
 
 
+/* Time estimation and routing logic between two points */
 function planTravel() {
     const start = markers['start'] ? markers['start'].getLatLng() : null;
     const end = markers['end'] ? markers['end'].getLatLng() : null;
@@ -192,6 +207,7 @@ function planTravel() {
         return;
     }
 
+    // Create a route and add it to the map
     routingControl = L.Routing.control({
         waypoints: [
             L.latLng(start.lat, start.lng),
@@ -205,6 +221,7 @@ function planTravel() {
             const route = routes[0];
             const travelTimeInSeconds = route.summary.totalTime;
 
+            // Estimate time to leave for poignant arrival time
             const leaveTime = new Date(arrivalTime.getTime() - (travelTimeInSeconds * 1200));
             const leaveTimeFormatted = leaveTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
 
@@ -215,22 +232,12 @@ function planTravel() {
     // Handle duplicate markers
     map.removeLayer(markers['start']);
     map.removeLayer(markers['end']);
-    
-    // Update the start and end markers on drag
-    // routingControl.on('routeselected', function(e) {
-    //     const route = e.route;
-    //     const waypoints = route.waypoints;
-
-    //     if (waypoints.length === 2) {
-    //         markers['start'].setLatLng(waypoints[0].latLng);
-    //         markers['end'].setLatLng(waypoints[1].latLng);
-    //     }
-    // });
 }
 
 
+/* Parse user input as 12hr formatted time */
 function parseTime(timeString) {
-    const regex = /^(\d{1,2}):(\d{2})(\w{2})$/i;
+    const regex = /^(\d{1,2}):(\d{2})\s(\w{2})$/i;
     const match = timeString.match(regex);
     if (!match) {
         return null;
@@ -297,13 +304,13 @@ document.getElementById('end').addEventListener('change', async function() {
 var map = L.map('map');
 var markers = {}; // Declare markers object
 
-// Default view to include user's current location
+// Get user's current location and create new marker with it in the map's view
 navigator.geolocation.getCurrentPosition(function(pos) {
     var lat = pos.coords.latitude;
     var lng = pos.coords.longitude;
     map.setView([lat, lng], 13);
 
-    // Call success function to place marker and set default start location
+    // Call success function to place marker and set default start location to user's current location
     success(pos);
 }, function (err) {
     if (err === 1) {
@@ -313,15 +320,15 @@ navigator.geolocation.getCurrentPosition(function(pos) {
     }
 });
 
+/* Import a visual for our map */
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
-
-/* call autocomplete for user input */
+/* Attempt to autofill address based on the current text box */
 autocomplete('start', 'start-locations');
 autocomplete('end', 'end-locations');
 
 /* Change location upon user clicks */
-map.on('click', addLocation);
+map.on('click', placeMarkerAtCursor);
