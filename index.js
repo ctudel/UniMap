@@ -1,3 +1,23 @@
+let marker, circle, zoomed, routingControl;
+
+
+function resetMap() {
+    if (routingControl) {
+        map.removeControl(routingControl);
+        removeMarker('circle');
+    }
+
+    if (!map.hasLayer(markers['start'])) {
+        markers['start'].addTo(map);
+    }
+
+    if (!map.hasLayer(markers['end'])) {
+        markers['end'].addTo(map);
+    }
+
+}
+
+
 function reverseGeocode(lat, lng) {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
 
@@ -13,9 +33,6 @@ function reverseGeocode(lat, lng) {
         });
 }
 
-
-
-let marker, circle, zoomed;
 
 function success(pos) {
     const lat = pos.coords.latitude;
@@ -43,19 +60,89 @@ function success(pos) {
             .then(address => {
                 if (address) {
                     document.getElementById('start').value = address;
+                    markers['start'] = marker;
+                    markers['circle'] = circle;
                 }
             });
     }
 }
 
-function error(err){
-    if (err === 1) {
-        alert("Error: Location access was denied!");
-    } else {
-        alert("Error: cannot retrieve current location");
+
+function placeMarker(type, lat, lng) {
+
+    // Remove old markers if any
+    if (markers[type]) {
+        map.removeLayer(markers[type]);
+        delete markers[type];
+    }
+
+    // Create a marker
+    markers[type] = L.marker([lat, lng]).addTo(map);
+
+    // Set the view to include both markers
+    map.fitBounds([
+        markers['start'] ? markers['start'].getLatLng() : markers['end'].getLatLng(),
+        markers['end'] ? markers['end'].getLatLng() : markers['start'].getLatLng()
+    ]);
+}
+
+
+function removeMarker(type) {
+    if (markers[type]) {
+        map.removeLayer(markers[type]);
+        delete markers[type];
     }
 }
 
+
+function addLocation(e) {
+    const lat = e.latlng.lat;
+    const lng = e.latlng.lng;
+    const startInput = document.getElementById('start');
+    const endInput = document.getElementById('end');
+
+    if (startInput.value === '' || startInput.value === ' ') {
+        placeMarker('start', lat, lng);
+
+        reverseGeocode(lat, lng)
+            .then(address => {
+                if (address) {
+                    startInput.value = address;
+                }
+            });
+
+    } else if (endInput.value === '' || endInput.value === ' ') {
+        placeMarker('end', lat, lng);
+
+        reverseGeocode(lat, lng)
+            .then(address => {
+                if (address) {
+                    endInput.value = address;
+                }
+            });
+
+    } else { console.log("Could not place marker, necessary locations exist"); }
+}
+
+
+async function geocode(location) {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${location}`;
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.length === 0) {
+            console.error('No results found');
+            return null;
+        }
+
+        return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+    } catch (error) {
+        console.error('Error fetching geocoding data:', error);
+        return null;
+    }
+}
 
 
 function autocomplete(inputId, datalistId) {
@@ -65,7 +152,7 @@ function autocomplete(inputId, datalistId) {
     input.addEventListener('input', async function() {
         const query = input.value;
 
-        if (query.length < 3) {
+        if (query.length < 2) {
             datalist.innerHTML = ''; // Clear the datalist if the query is too short
             return;
         }
@@ -88,44 +175,6 @@ function autocomplete(inputId, datalistId) {
     });
 }
 
-autocomplete('start', 'start-locations');
-autocomplete('end', 'end-locations');
-
-function placeMarker(type, lat, lon) {
-    // Remove old markers if any
-    if (markers[type]) {
-        map.removeLayer(markers[type]);
-    }
-
-    // Create a marker
-    markers[type] = L.marker([lat, lon]).addTo(map);
-
-    // Set the view to include both markers
-    map.fitBounds([
-        markers['start'] ? markers['start'].getLatLng() : markers['end'].getLatLng(),
-        markers['end'] ? markers['end'].getLatLng() : markers['start'].getLatLng()
-    ]);
-}
-
-async function geocode(location) {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${location}`;
-
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.length === 0) {
-            console.error('No results found');
-            return null;
-        }
-
-        return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
-    } catch (error) {
-        console.error('Error fetching geocoding data:', error);
-        return null;
-    }
-}
-
 
 function planTravel() {
     const start = markers['start'] ? markers['start'].getLatLng() : null;
@@ -143,11 +192,11 @@ function planTravel() {
         return;
     }
 
-    L.Routing.control({
+    routingControl = L.Routing.control({
         waypoints: [
             L.latLng(start.lat, start.lng),
             L.latLng(end.lat, end.lng)
-        ],
+        ], 
         routeWhileDragging: true,
         show: false
     }).on('routesfound', function(e) {
@@ -162,6 +211,21 @@ function planTravel() {
             alert(`You should leave at ${leaveTimeFormatted} to arrive at ${arrivalTimeStr}`);
         }
     }).addTo(map);
+
+    // Handle duplicate markers
+    map.removeLayer(markers['start']);
+    map.removeLayer(markers['end']);
+    
+    // Update the start and end markers on drag
+    // routingControl.on('routeselected', function(e) {
+    //     const route = e.route;
+    //     const waypoints = route.waypoints;
+
+    //     if (waypoints.length === 2) {
+    //         markers['start'].setLatLng(waypoints[0].latLng);
+    //         markers['end'].setLatLng(waypoints[1].latLng);
+    //     }
+    // });
 }
 
 
@@ -190,6 +254,44 @@ function parseTime(timeString) {
 }
 
 
+/* Detect if a start location is entered and place marker */
+document.getElementById('start').addEventListener('change', async function() {
+    const startLocation = this.value;
+
+    if (startLocation === '' || startLocation === ' ') {
+        removeMarker('start');
+        removeMarker('circle');
+    }
+
+    if (!startLocation) return;
+
+    const startCoordinates = await geocode(startLocation);
+    if (!startCoordinates) return;
+
+    placeMarker('start', startCoordinates.lat, startCoordinates.lon);
+
+    resetMap();
+});
+
+
+/* Detect if an end location is entered and place marker */
+document.getElementById('end').addEventListener('change', async function() {
+    const endLocation = this.value;
+
+    if (endLocation === '' || endLocation === ' ') {
+        removeMarker('end');
+    }
+
+    if (!endLocation) return;
+
+    const endCoordinates = await geocode(endLocation);
+    if (!endCoordinates) return;
+
+    placeMarker('end', endCoordinates.lat, endCoordinates.lon);
+
+    resetMap();
+});
+
 
 /* Initialize map */
 var map = L.map('map');
@@ -203,7 +305,13 @@ navigator.geolocation.getCurrentPosition(function(pos) {
 
     // Call success function to place marker and set default start location
     success(pos);
-}, error);
+}, function (err) {
+    if (err === 1) {
+        alert("Error: Location access was denied!");
+    } else {
+        alert("Error: cannot retrieve current location");
+    }
+});
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -211,27 +319,9 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 
-/* Detect if a start location is entered and place marker */
-document.getElementById('start').addEventListener('change', async function() {
-    const startLocation = this.value;
+/* call autocomplete for user input */
+autocomplete('start', 'start-locations');
+autocomplete('end', 'end-locations');
 
-    if (!startLocation) return;
-
-    const startCoordinates = await geocode(startLocation);
-    if (!startCoordinates) return;
-
-    placeMarker('start', startCoordinates.lat, startCoordinates.lon);
-});
-
-
-/* Detect if an end location is entered and place marker */
-document.getElementById('end').addEventListener('change', async function() {
-    const endLocation = this.value;
-
-    if (!endLocation) return;
-
-    const endCoordinates = await geocode(endLocation);
-    if (!endCoordinates) return;
-
-    placeMarker('end', endCoordinates.lat, endCoordinates.lon);
-});
+/* Change location upon user clicks */
+map.on('click', addLocation);
