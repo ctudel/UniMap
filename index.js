@@ -300,14 +300,14 @@ document.getElementById('end').addEventListener('change', async function() {
 
 
 /* Initialize map */
-var map = L.map('map');
+var map = L.map('map').setView([43.618881, -116.215019], 13);
 var markers = {}; // Declare markers object
 
 /* Import a visual for our map */
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map);
+		maxZoom: 19,
+		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+	}).addTo(map);
 
 // Get user's current location and create new marker with it in the map's view
 navigator.geolocation.getCurrentPosition(async function(pos) {
