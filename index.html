@@ -4,39 +4,43 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travel Planner</title>
+    <title>OnTime</title>
+
     <!-- leaflet stylesheet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
           crossorigin=""/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
-    <!-- personal stylesheet -->
-    <link rel="stylesheet" href="./index.css">
+
     <!-- leaflet scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-            crossorigin=""></script>
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>            
+
+    <!-- personal stylesheet -->
+    <link rel="stylesheet" href="./index.css">
 </head>
 <body>
-    <h1>Travel Planner</h1>
 
-    <div class="inputs">
-        <label for="start">Start Location:</label>
-        <input type="text" id="start" list="start-locations" placeholder="Enter start location">
-        <datalist id="start-locations"></datalist>
+    <div class="main_page">
+        <div id="map" style="width:100%; height: 500px;"></div>
 
-        <label for="end">End Location:</label>
-        <input type="text" id="end" list="end-locations" placeholder="Enter end location">
-        <datalist id="end-locations"></datalist>
+        <div class="inputs">
+            <label for="start">Start Location:</label>
+            <input type="text" id="start" list="start-locations" placeholder="Enter start location">
+            <datalist id="start-locations"></datalist>
 
-        <label for="time">Arrival Time:</label>
-        <input type="text" id="time" placeholder="Enter arrival time">
+            <label for="end">End Location:</label>
+            <input type="text" id="end" list="end-locations" placeholder="Enter end location">
+            <datalist id="end-locations"></datalist>
 
-        <button onclick="planTravel()">Plan Travel</button>
+            <label for="time">Arrival Time:</label>
+            <input type="text" id="time" placeholder="Enter arrival time">
+
+            <button onclick="planTravel()">Plan Travel</button>
+        </div>
     </div>
-
-    <div id="map" style="width:100%; height: 500px;"></div>
 
     <script src="./index.js"></script>
 </body>
