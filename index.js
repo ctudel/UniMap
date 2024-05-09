@@ -18,13 +18,14 @@ function resetMap() {
 }
 
 /* Finds an address based on latitude and longtitude */
-function reverseGeocode(lat, lng) {
+async function reverseGeocode(lat, lng) {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
 
-    return fetch(url)
-        .then(response => response.json())
-        .then(data => {
+    return await fetch(url)
+        .then(async response => await response.json())
+        .then(async data => {
             const address = data.display_name;
+            await new Promise(resolve => setTimeout(resolve, 1000));
             return address.split(',')[1]; // Use only the first part of the display name as the relative name
         })
         .catch(error => {
@@ -34,7 +35,7 @@ function reverseGeocode(lat, lng) {
 }
 
 /* Locates the user's current position if successfully found */
-function success(pos) {
+async function success(pos) {
     const lat = pos.coords.latitude;
     const lng = pos.coords.longitude;
     const accuracy = pos.coords.accuracy;
@@ -56,14 +57,12 @@ function success(pos) {
         zoomed = map.fitBounds(circle.getBounds());
 
         // Use reverse geocoding to get the address and set it as the default value of the start location text box
-        reverseGeocode(lat, lng)
-            .then(address => {
-                if (address) {
-                    document.getElementById('start').value = address;
-                    markers['start'] = marker;
-                    markers['circle'] = circle;
-                }
-            });
+        const address = await reverseGeocode(lat, lng);
+        if (address) {
+            document.getElementById('start').value = address;
+            markers['start'] = marker;
+            markers['circle'] = circle;
+        }
     }
 }
 
@@ -102,7 +101,7 @@ function removeMarker(type) {
 
 
 /* Places a marker wherever a user clicks on the map */
-function placeMarkerAtCursor(e) {
+async function placeMarkerAtCursor(e) {
     const lat = e.latlng.lat;
     const lng = e.latlng.lng;
     const startInput = document.getElementById('start');
@@ -112,23 +111,19 @@ function placeMarkerAtCursor(e) {
     if (startInput.value === '' || startInput.value === ' ') {
         placeMarker('start', lat, lng);
 
-        reverseGeocode(lat, lng)
-            .then(address => {
-                if (address) {
-                    startInput.value = address;
-                }
-            });
+        const address = await reverseGeocode(lat, lng);
+        if (address) {
+            startInput.value = address;
+        }
 
     // Validate end target address does not exist
     } else if (endInput.value === '' || endInput.value === ' ') {
         placeMarker('end', lat, lng);
 
-        reverseGeocode(lat, lng)
-            .then(address => {
-                if (address) {
-                    endInput.value = address;
-                }
-            });
+        const address = await reverseGeocode(lat, lng);
+        if (address) {
+            endInput.value = address;
+        }
 
     // Otherwise, log and do nothing
     } else { console.log("Could not place marker, necessary locations exist"); }
@@ -149,6 +144,7 @@ async function geocode(location) {
         }
 
         return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+
     } catch (error) {
         console.error('Error fetching geocoding data:', error);
         return null;
@@ -157,7 +153,7 @@ async function geocode(location) {
 
 
 /* An attempt to autocomplete an address while the user is typing */
-function autocomplete(inputId, datalistId) {
+async function autocomplete(inputId, datalistId) {
     const input = document.getElementById(inputId);
     const datalist = document.getElementById(datalistId);
 
@@ -178,11 +174,14 @@ function autocomplete(inputId, datalistId) {
 
             datalist.innerHTML = ''; // Clear the datalist before adding new options
 
-            data.forEach(item => {
+            data.forEach(async item => {
                 const option = document.createElement('option');
                 option.value = item.display_name;
                 datalist.appendChild(option);
             });
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
         } catch (error) {
             console.error('Error fetching autocomplete data:', error);
         }
@@ -304,14 +303,20 @@ document.getElementById('end').addEventListener('change', async function() {
 var map = L.map('map');
 var markers = {}; // Declare markers object
 
+/* Import a visual for our map */
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+
 // Get user's current location and create new marker with it in the map's view
-navigator.geolocation.getCurrentPosition(function(pos) {
+navigator.geolocation.getCurrentPosition(async function(pos) {
     var lat = pos.coords.latitude;
     var lng = pos.coords.longitude;
     map.setView([lat, lng], 13);
 
     // Call success function to place marker and set default start location to user's current location
-    success(pos);
+    await success(pos);
 }, function (err) {
     if (err === 1) {
         alert("Error: Location access was denied!");
@@ -319,12 +324,6 @@ navigator.geolocation.getCurrentPosition(function(pos) {
         alert("Error: cannot retrieve current location");
     }
 });
-
-/* Import a visual for our map */
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map);
 
 /* Attempt to autofill address based on the current text box */
 autocomplete('start', 'start-locations');
