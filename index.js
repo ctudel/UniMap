@@ -114,6 +114,7 @@ async function placeMarkerAtCursor(e) {
         const address = await reverseGeocode(lat, lng);
         if (address) {
             startInput.value = address;
+            resetMap();
         }
 
     // Validate end target address does not exist
@@ -123,6 +124,7 @@ async function placeMarkerAtCursor(e) {
         const address = await reverseGeocode(lat, lng);
         if (address) {
             endInput.value = address;
+            resetMap();
         }
 
     // Otherwise, log and do nothing
@@ -206,15 +208,20 @@ function planTravel() {
         return;
     }
 
+    var startCoordinates = L.latLng(start.lat, start.lng);
+    var endCoordinates = L.latLng(end.lat, end.lng);
+
     // Create a route and add it to the map
     routingControl = L.Routing.control({
         waypoints: [
-            L.latLng(start.lat, start.lng),
-            L.latLng(end.lat, end.lng)
+            startCoordinates,
+            endCoordinates
         ], 
         routeWhileDragging: true,
         show: false
-    }).on('routesfound', function(e) {
+    }).addTo(map);
+    
+    routingControl.on('routesfound', function(e) {
         const routes = e.routes;
         if (routes && routes.length > 0) {
             const route = routes[0];
@@ -226,7 +233,7 @@ function planTravel() {
 
             alert(`You should leave at ${leaveTimeFormatted} to arrive at ${arrivalTimeStr}`);
         }
-    }).addTo(map);
+    });
 
     // Handle duplicate markers
     map.removeLayer(markers['start']);
