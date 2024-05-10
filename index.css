@@ -6,23 +6,7 @@
 .inputs {
     display: flex;
     gap: 1rem; /* Adds space between each input element */
-
-    @media screen and (max-width: 1000px) {
-        flex-flow: column;    
-    }
-
-    
-    @media screen and (max-width:767px) {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        z-index: 1000; /* Ensure the text boxes are above the map */
-        background-color: white;
-        padding: 10px;
-        border-radius: 5px;
-    }
 }
-
 
 .inputs label {
     margin-bottom: 0.5rem; /* Adds space below each label */
@@ -51,6 +35,38 @@
 .inputs button:hover {
     background-color: #0056b3; /* Sets the background color of the button on hover */
 }
+
+
+#map {
+    width: 100%;
+    height: 100vb;
+}
+
+
+@media screen and (max-width: 1000px) {
+    .inputs {
+        flex-flow: column;
+    }
+
+    #map {
+        width: 100%;
+        height: 500px;
+    }
+}
+
+
+@media screen and (max-width:767px) {
+    .inputs {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 1000; /* Ensure the text boxes are above the map */
+        background-color: white;
+        padding: 10px;
+        border-radius: 5px;
+    }
+}
+
 
 @media (prefers-color-scheme: dark) {
     body {
