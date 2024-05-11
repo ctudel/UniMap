@@ -5,7 +5,7 @@
 let marker, circle, zoomed, routingControl;
 
 /* Resets map interface */
-function resetMap() {
+let resetMap = () => {
     if (routingControl) {
         map.removeControl(routingControl);
         removeMarker('circle');
@@ -22,7 +22,7 @@ function resetMap() {
 }
 
 /* Finds an address based on latitude and longtitude */
-async function reverseGeocode(lat, lng) {
+let reverseGeocode = async (lat, lng) => {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
 
     return await fetch(url)
@@ -39,7 +39,7 @@ async function reverseGeocode(lat, lng) {
 }
 
 /* Locates the user's current position if successfully found */
-async function success(pos) {
+let success = async (pos) => {
     const lat = pos.coords.latitude;
     const lng = pos.coords.longitude;
     const accuracy = pos.coords.accuracy;
@@ -76,7 +76,7 @@ async function success(pos) {
  * param 'type' is the key value used for storing a marker in the
  *      markers array
  */
-function placeMarker(type, lat, lng) {
+let placeMarker = (type, lat, lng) => {
 
     // Remove old markers if any
     if (markers[type]) {
@@ -96,7 +96,7 @@ function placeMarker(type, lat, lng) {
 
 
 /* Removes a marker from the map */
-function removeMarker(type) {
+let removeMarker = (type) => {
     if (markers[type]) {
         map.removeLayer(markers[type]);
         delete markers[type];
@@ -105,7 +105,7 @@ function removeMarker(type) {
 
 
 /* Places a marker when a user clicks on the map */
-async function placeMarkerAtCursor(e) {
+let placeMarkerAtCursor = async (e) => {
     const lat = e.latlng.lat;
     const lng = e.latlng.lng;
     const startInput = document.getElementById('start');
@@ -122,7 +122,7 @@ async function placeMarkerAtCursor(e) {
         }
 
     // Validate end target address does not exist
-    } else if (endInput.value === '' || endInput.value === ' ') {
+    } else {
         placeMarker('end', lat, lng);
 
         const address = await reverseGeocode(lat, lng);
@@ -131,13 +131,12 @@ async function placeMarkerAtCursor(e) {
             resetMap();
         }
 
-    // Otherwise, log and do nothing
-    } else { console.log("Could not place marker, necessary locations exist"); }
+    } 
 }
 
 
 /* Retrieves the coordinates given an address */
-async function geocode(location) {
+let geocode = async (location) => {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${location}`;
 
     try { // attempt to fetch location
@@ -158,20 +157,39 @@ async function geocode(location) {
 }
 
 
+let getNewLocation = async (address, id) => {
+    const location = address;
+
+    if (location === '' || location === ' ') {
+        removeMarker(id);
+        if (id = 'start') removeMarker('circle');
+    }
+
+    if (!location) return;
+
+    const locationCoordinates = await geocode(location);
+    if (!locationCoordinates) return;
+
+    placeMarker(id, locationCoordinates.lat, locationCoordinates.lon);
+
+    resetMap();
+}
+
+
 /* Time estimation and routing logic between two points */
-function planTravel() {
+let planTravel = () => {
     const start = markers['start'] ? markers['start'].getLatLng() : null;
     const end = markers['end'] ? markers['end'].getLatLng() : null;
     const arrivalTimeStr = document.getElementById('time').value.trim();
 
     if (!start || !end || !arrivalTimeStr) {
-        alert('Please select both a start and end location, and enter an arrival time.');
+        showAlert('Please select a start, end location, and desired arrival time.');
         return;
     }
 
     const arrivalTime = parseTime(arrivalTimeStr);  // parse user time input
     if (!arrivalTime) {
-        alert('Invalid arrival time format. Please use HH:mm(am/pm) format.');
+        showAlert('Invalid arrival time format. Please use HH:mm(am/pm) format.');
         return;
     }
 
@@ -196,7 +214,7 @@ function planTravel() {
             const leaveTime = new Date(arrivalTime.getTime() - (travelTimeInSeconds * 1200));
             const leaveTimeFormatted = leaveTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
 
-            alert(`You should leave at ${leaveTimeFormatted} to arrive at ${arrivalTimeStr}`);
+            notification(`You should leave at ${leaveTimeFormatted} to arrive at ${arrivalTimeStr}`);
         }
     });
 
@@ -207,7 +225,7 @@ function planTravel() {
 
 
 /* Parse user input as 12hr formatted time */
-function parseTime(timeString) {
+let parseTime = (timeString) => {
     let regex = /^(\d{1,2}):(\d{2})(\w{2})$/i; // reg expression to match
     let match = timeString.match(regex);
 
@@ -232,7 +250,7 @@ function parseTime(timeString) {
 
 
 // field 2 could be minutes or period. field 3 can only be period if minutes exist
-function scanParsedTime(hours, minsOrPeriod, period) {
+let scanParsedTime = (hours, minsOrPeriod, period) => {
     if ((period === null)) {
 
         if (hours === 12) {
@@ -241,7 +259,7 @@ function scanParsedTime(hours, minsOrPeriod, period) {
             hours = minsOrPeriod === 'PM' ? hours + 12 : hours;
         }
 
-        if (hours < 0 || hours > 12) {
+        if (hours < 0 || hours > 23) {
             return null;
         }
 
@@ -255,7 +273,7 @@ function scanParsedTime(hours, minsOrPeriod, period) {
             hours = period === 'PM' ? hours + 12 : hours;
         }
 
-        if (hours < 0 || hours > 12 || minsOrPeriod < 0 || minsOrPeriod > 59) { // param 2 is minutes
+        if (hours < 0 || hours > 23 || minsOrPeriod < 0 || minsOrPeriod > 59) { // param 2 is minutes
             return null;
         }
 
@@ -265,19 +283,47 @@ function scanParsedTime(hours, minsOrPeriod, period) {
 }
 
 
+function showAlert(message) {
+    var alertBox = document.getElementById('alert');
+    var alertText = document.getElementById('alert-text');
+    alertText.textContent = message;
+    alertBox.style.display = 'block';
+  
+    // Hide the alert after 3 seconds
+    setTimeout(function() {
+      alertBox.style.display = 'none';
+    }, 3000);
+  }
+
+
+function notification(message) {
+    var notificationBox = document.getElementById('notification');
+    var notificationText = document.getElementById('notification-text');
+    notificationText.textContent = message;
+    notificationBox.style.display = 'block';
+
+    setTimeout(function() {
+        notificationBox.style.display = 'none';
+    }, 3000)
+}
+  
+
+
 //+++++++++++++
 // HTML ACTIONS
 //+++++++++++++
 
 /* Activate routing between two points if the enter key is pressed */
-document.getElementById('start').addEventListener('keypress', function(event) {
+document.getElementById('start').addEventListener('keypress', async function(event) {
     if (event.key === 'Enter') {
+        await getNewLocation(this.value,'start');
         planTravel();
     }
 });
 
-document.getElementById('end').addEventListener('keypress', function(event) {
+document.getElementById('end').addEventListener('keypress', async function(event) {
     if (event.key === 'Enter') {
+        await getNewLocation(this.value, 'end');
         planTravel();
     }
 });
@@ -288,42 +334,13 @@ document.getElementById('time').addEventListener('keypress', function(event) {
     }
 });
 
-/* Detect if a start location is entered and place marker */
+/* Detect if a new location is entered and place marker */
 document.getElementById('start').addEventListener('change', async function() {
-    const startLocation = this.value;
-
-    if (startLocation === '' || startLocation === ' ') {
-        removeMarker('start');
-        removeMarker('circle');
-    }
-
-    if (!startLocation) return;
-
-    const startCoordinates = await geocode(startLocation);
-    if (!startCoordinates) return;
-
-    placeMarker('start', startCoordinates.lat, startCoordinates.lon);
-
-    resetMap();
+    await getNewLocation(this.value, 'start');
 });
 
-
-/* Detect if an end location is entered and place marker */
 document.getElementById('end').addEventListener('change', async function() {
-    const endLocation = this.value;
-
-    if (endLocation === '' || endLocation === ' ') {
-        removeMarker('end');
-    }
-
-    if (!endLocation) return;
-
-    const endCoordinates = await geocode(endLocation);
-    if (!endCoordinates) return;
-
-    placeMarker('end', endCoordinates.lat, endCoordinates.lon);
-
-    resetMap();
+    await getNewLocation(this.value, 'end');
 });
 
 
@@ -353,9 +370,9 @@ navigator.geolocation.getCurrentPosition(async function(pos) {
     await success(pos);
 }, function (err) {
     if (err === 1) {
-        alert("Error: Location access was denied!");
+        showAlert("Error: Location access was denied!");
     } else {
-        alert("Error: cannot retrieve current location");
+        showAlert("Error: cannot retrieve current location");
     }
 });
 
