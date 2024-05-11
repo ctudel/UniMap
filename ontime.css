@@ -1,8 +1,6 @@
-.main_page {
-    display: flex;
-    flex-direction: column-reverse;
-}
+/* Global styling */
 
+/* Default class and id */
 .inputs {
     display: flex;
     gap: 1rem; /* Adds space between each input element */
@@ -23,7 +21,7 @@
 
 .inputs button {
     padding: 0.5rem 1rem; /* Adds padding inside the button */
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     background-color: #007bff; /* Sets the background color of the button */
     color: #fff; /* Sets the text color of the button */
     border: none; /* Removes the default button border */
@@ -39,10 +37,11 @@
 
 #map {
     width: 100%;
-    height: 100vb;
+    height: 90vh;
 }
 
 
+/* Desktop scaled window styling */
 @media screen and (max-width: 1000px) {
     .inputs {
         flex-flow: column;
@@ -50,24 +49,50 @@
 
     #map {
         width: 100%;
-        height: 500px;
+        height: 50vh;
     }
 }
 
 
+/* Mobile styling */
 @media screen and (max-width:767px) {
     .inputs {
         position: absolute;
-        top: 10px;
-        left: 10px;
-        z-index: 1000; /* Ensure the text boxes are above the map */
-        background-color: white;
-        padding: 10px;
-        border-radius: 5px;
+        width: 90%;
+        top: 0;
+        padding: 5px;
+    }
+
+    .inputs label {
+        margin-bottom: 0;
+        font-size: 12px;
+    }
+    
+    
+    .inputs input {
+        border: 1px solid #ccc; /* Adds a border to each input element */
+        border-radius: 4px; /* Adds rounded corners to each input element */
+    }
+    
+    
+    .inputs button {
+        padding: 5px;
+        margin-bottom: 0;
+        background-color: #007bff; /* Sets the background color of the button */
+        color: #fff; /* Sets the text color of the button */
+        border: none; /* Removes the default button border */
+        border-radius: 4px; /* Adds rounded corners to the button */
+        cursor: pointer; /* Changes the cursor to a pointer on hover */
+    }
+
+    #map {
+        position: relative;
+        top: 310px;
     }
 }
 
 
+/* Dark Mode Styling */
 @media (prefers-color-scheme: dark) {
     body {
         background-color: #262626
@@ -87,16 +112,18 @@
     }
 
     .inputs button {
-        padding: 0.5rem 1rem; /* Adds padding inside the button */
-        margin-bottom: 20px;
         background-color: #ffd500; /* Sets the background color of the button */
         color: #000; /* Sets the text color of the button */
-        border: none; /* Removes the default button border */
-        border-radius: 4px; /* Adds rounded corners to the button */
         cursor: pointer; /* Changes the cursor to a pointer on hover */
     }
 
     .inputs button:hover {
         background-color: #cdaa00; /* Sets the background color of the button on hover */
+    }
+
+    @media screen and (max-width: 767px) {
+        .inputs {
+            background-color: rgba(255, 255, 255, 0);
+        }
     }
 }

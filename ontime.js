@@ -1,3 +1,7 @@
+//++++++++++++++
+// MAP FUNCTIONS
+//++++++++++++++
+
 let marker, circle, zoomed, routingControl;
 
 /* Resets map interface */
@@ -100,7 +104,7 @@ function removeMarker(type) {
 }
 
 
-/* Places a marker wherever a user clicks on the map */
+/* Places a marker when a user clicks on the map */
 async function placeMarkerAtCursor(e) {
     const lat = e.latlng.lat;
     const lng = e.latlng.lng;
@@ -136,7 +140,7 @@ async function placeMarkerAtCursor(e) {
 async function geocode(location) {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${location}`;
 
-    try {
+    try { // attempt to fetch location
         const response = await fetch(url);
         const data = await response.json();
 
@@ -145,49 +149,12 @@ async function geocode(location) {
             return null;
         }
 
-        return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+        return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) }; // parse coords
 
     } catch (error) {
         console.error('Error fetching geocoding data:', error);
         return null;
     }
-}
-
-
-/* An attempt to autocomplete an address while the user is typing */
-async function autocomplete(inputId, datalistId) {
-    const input = document.getElementById(inputId);
-    const datalist = document.getElementById(datalistId);
-
-    // Listen for user input event
-    input.addEventListener('input', async function() {
-        const query = input.value;
-
-        if (query.length < 2) {
-            datalist.innerHTML = ''; // Clear the datalist if the query is too short
-            return;
-        }
-
-        // Fetch nominatim API and create autocomplete option list
-        const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=json`;
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-
-            datalist.innerHTML = ''; // Clear the datalist before adding new options
-
-            data.forEach(async item => {
-                const option = document.createElement('option');
-                option.value = item.display_name;
-                datalist.appendChild(option);
-            });
-            
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-        } catch (error) {
-            console.error('Error fetching autocomplete data:', error);
-        }
-    });
 }
 
 
@@ -202,25 +169,23 @@ function planTravel() {
         return;
     }
 
-    const arrivalTime = parseTime(arrivalTimeStr);
+    const arrivalTime = parseTime(arrivalTimeStr);  // parse user time input
     if (!arrivalTime) {
-        alert('Invalid arrival time format. Please use HH:mm:Period format.');
+        alert('Invalid arrival time format. Please use HH:mm(am/pm) format.');
         return;
     }
-
-    var startCoordinates = L.latLng(start.lat, start.lng);
-    var endCoordinates = L.latLng(end.lat, end.lng);
 
     // Create a route and add it to the map
     routingControl = L.Routing.control({
         waypoints: [
-            startCoordinates,
-            endCoordinates
+            L.latLng(start.lat, start.lng), // start coords
+            L.latLng(end.lat, end.lng) // end coords
         ], 
         routeWhileDragging: true,
         show: false
     }).addTo(map);
     
+    // Start calculations
     routingControl.on('routesfound', function(e) {
         const routes = e.routes;
         if (routes && routes.length > 0) {
@@ -243,29 +208,85 @@ function planTravel() {
 
 /* Parse user input as 12hr formatted time */
 function parseTime(timeString) {
-    const regex = /^(\d{1,2}):(\d{2})\s(\w{2})$/i;
-    const match = timeString.match(regex);
+    let regex = /^(\d{1,2}):(\d{2})(\w{2})$/i; // reg expression to match
+    let match = timeString.match(regex);
+
     if (!match) {
-        return null;
+        regex = /^(\d{1,2})(\w{2})$/i;
+        match = timeString.match(regex);
+
+        if (!match) return null;
+
+        let hours = parseInt(match[1], 10);
+        const period = match[2].toUpperCase();
+
+        return scanParsedTime(hours, period, null);
     }
 
     let hours = parseInt(match[1], 10);
     const minutes = parseInt(match[2], 10);
     const period = match[3].toUpperCase();
 
-    if (hours === 12) {
-        hours = period === 'AM' ? 0 : 12;
-    } else {
-        hours = period === 'PM' ? hours + 12 : hours;
-    }
-
-    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-        return null;
-    }
-
-    return new Date(2000, 0, 1, hours, minutes);
+    return scanParsedTime(hours, minutes, period);
 }
 
+
+// field 2 could be minutes or period. field 3 can only be period if minutes exist
+function scanParsedTime(hours, minsOrPeriod, period) {
+    if ((period === null)) {
+
+        if (hours === 12) {
+            hours = minsOrPeriod === 'AM' ? 0 : 12; // param 2 is period
+        } else {
+            hours = minsOrPeriod === 'PM' ? hours + 12 : hours;
+        }
+
+        if (hours < 0 || hours > 12) {
+            return null;
+        }
+
+        return new Date(2000, 0, 1, hours, 0);
+
+    } else {
+
+        if (hours === 12) {
+            hours = period === 'AM' ? 0 : 12;
+        } else {
+            hours = period === 'PM' ? hours + 12 : hours;
+        }
+
+        if (hours < 0 || hours > 12 || minsOrPeriod < 0 || minsOrPeriod > 59) { // param 2 is minutes
+            return null;
+        }
+
+        return new Date(2000, 0, 1, hours, minsOrPeriod);
+
+    }
+}
+
+
+//+++++++++++++
+// HTML ACTIONS
+//+++++++++++++
+
+/* Activate routing between two points if the enter key is pressed */
+document.getElementById('start').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        planTravel();
+    }
+});
+
+document.getElementById('end').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        planTravel();
+    }
+});
+
+document.getElementById('time').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        planTravel();
+    }
+});
 
 /* Detect if a start location is entered and place marker */
 document.getElementById('start').addEventListener('change', async function() {
@@ -306,6 +327,12 @@ document.getElementById('end').addEventListener('change', async function() {
 });
 
 
+
+
+//++++++++++++++
+// PROGRAM CALLS
+//++++++++++++++
+
 /* Initialize map */
 var map = L.map('map').setView([43.618881, -116.215019], 13);
 var markers = {}; // Declare markers object
@@ -331,10 +358,6 @@ navigator.geolocation.getCurrentPosition(async function(pos) {
         alert("Error: cannot retrieve current location");
     }
 });
-
-/* Attempt to autofill address based on the current text box */
-autocomplete('start', 'start-locations');
-autocomplete('end', 'end-locations');
 
 /* Change location upon user clicks */
 map.on('click', placeMarkerAtCursor);
