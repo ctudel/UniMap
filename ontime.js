@@ -6,16 +6,16 @@ let marker, circle, zoomed, routingControl;
 
 /* Resets map interface */
 let resetMap = () => {
-    if (routingControl) {
+    if (routingControl) { // remove any routes on the map
         map.removeControl(routingControl);
         removeMarker('circle');
     }
 
-    if (!map.hasLayer(markers['start'])) {
+    if (!map.hasLayer(markers['start'])) { // handles markers['start'] exists, but not on the map
         markers['start'].addTo(map);
     }
 
-    if (!map.hasLayer(markers['end'])) {
+    if (!map.hasLayer(markers['end'])) { // handles markers['end'] exists, but not on the map
         markers['end'].addTo(map);
     }
 
@@ -54,8 +54,7 @@ let success = async (pos) => {
     marker = L.marker([lat, lng]).addTo(map);
     circle = L.circle([lat, lng], { radius: accuracy % 500 }).addTo(map);
 
-    // Will adjust the window to zoom when run for the first time
-    // Otherwise, let the user zoom to the desired scale
+    // Zoom to user's current location
     if (!zoomed) {
         // Move the map to the user's location
         zoomed = map.fitBounds(circle.getBounds());
@@ -157,6 +156,7 @@ let geocode = async (location) => {
 }
 
 
+/* Place marker on a new location */
 let getNewLocation = async (address, id) => {
     const location = address;
 
@@ -248,8 +248,7 @@ let parseTime = (timeString) => {
     return scanParsedTime(hours, minutes, period);
 }
 
-
-// field 2 could be minutes or period. field 3 can only be period if minutes exist
+/* Scan and reformat the parsed user time input */
 let scanParsedTime = (hours, minsOrPeriod, period) => {
     if ((period === null)) {
 
@@ -283,6 +282,7 @@ let scanParsedTime = (hours, minsOrPeriod, period) => {
 }
 
 
+/* Create visual message for user */
 function showAlert(message) {
     var alertBox = document.getElementById('alert');
     var alertText = document.getElementById('alert-text');
