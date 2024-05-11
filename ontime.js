@@ -178,6 +178,8 @@ let getNewLocation = async (address, id) => {
 
 /* Time estimation and routing logic between two points */
 let planTravel = () => {
+    resetMap(); // reset map if needed
+
     const start = markers['start'] ? markers['start'].getLatLng() : null;
     const end = markers['end'] ? markers['end'].getLatLng() : null;
     const arrivalTimeStr = document.getElementById('time').value.trim();
