@@ -1,7 +1,7 @@
 //++++++++++++++
 // MAP FUNCTIONS
 //++++++++++++++
-
+let token = 'pk.eyJ1IjoiY3R1ZGVsIiwiYSI6ImNsd2hkMWl4djA3cTAya29hYmFtZjcxajIifQ.2Ugfx9Y20dpgJgMaFyn5kw';
 let marker, circle, zoomed, routingControl;
 
 /* Resets map interface */
@@ -201,6 +201,9 @@ let planTravel = () => {
             L.latLng(start.lat, start.lng), // start coords
             L.latLng(end.lat, end.lng) // end coords
         ], 
+        router: new L.Routing.mapbox(token, {
+            profile: 'mapbox/driving'
+        }),
         routeWhileDragging: true,
         show: false
     }).addTo(map);
@@ -220,6 +223,9 @@ let planTravel = () => {
         }
     });
 
+    // // Log the user's travel method to console
+    // console.log(routingControl.options.router.options.profile);
+
     // Handle duplicate markers
     map.removeLayer(markers['start']);
     map.removeLayer(markers['end']);
@@ -237,13 +243,13 @@ let parseTime = (timeString) => {
 
         if (!match) return null;
 
-        let hours = parseInt(match[1], 10);
+        const hours = parseInt(match[1], 10);
         const period = match[2].toUpperCase();
 
         return scanParsedTime(hours, period, null);
     }
 
-    let hours = parseInt(match[1], 10);
+    const hours = parseInt(match[1], 10);
     const minutes = parseInt(match[2], 10);
     const period = match[3].toUpperCase();
 
@@ -315,7 +321,7 @@ function notification(message) {
 // HTML ACTIONS
 //+++++++++++++
 
-/* Activate routing between two points if the enter key is pressed */
+/* Routing between two points if the enter key is pressed */
 document.getElementById('start').addEventListener('keypress', async function(event) {
     if (event.key === 'Enter') {
         await getNewLocation(this.value,'start');
@@ -357,9 +363,9 @@ var map = L.map('map').setView([43.618881, -116.215019], 13);
 var markers = {}; // Declare markers object
 
 /* Import a visual for our map */
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		maxZoom: 19,
-		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+		attribution: '@MapBox &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 	}).addTo(map);
 
 // Get user's current location and create new marker with it in the map's view
