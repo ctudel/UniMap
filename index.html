@@ -32,12 +32,19 @@
     <div class="main_page">
         <div class="inputs">
             <label for="start">Start Location:</label>
-            <input type="text" id="start" placeholder="Enter start location">
-            <datalist id="start-locations"></datalist>
+            <select type="text" id="start" list="addresses" placeholder="Enter start location"></select>
 
             <label for="end">End Location:</label>
-            <input type="text" id="end" placeholder="Enter end location">
-            <datalist id="end-locations"></datalist>
+            <select type="text" id="end" list="addresses" placeholder="Enter end location"></select>
+
+            <label for="transport">Mode of Transport</label>
+            <select id="transport" name="transport-list">
+                <!-- Do this for the other dropdowns above in your JS file -->
+                <option value="walking">Walking</option>
+                <option value="driving">Driving</option>
+                <option value="bicycle or skateboard">Bicycle or Skateboard</option>
+                <option value="transit">Shuttle</option>
+            </select>
 
             <label for="time">Arrival Time:</label>
             <input type="text" id="time" placeholder="Enter arrival time">
