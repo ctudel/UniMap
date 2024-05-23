@@ -3,6 +3,19 @@
 //++++++++++++++
 let token = 'pk.eyJ1IjoiY3R1ZGVsIiwiYSI6ImNsd2hkMWl4djA3cTAya29hYmFtZjcxajIifQ.2Ugfx9Y20dpgJgMaFyn5kw';
 let marker, circle, zoomed, routingControl;
+let markers = {};
+// TODO: create map for locations
+const locations = new Map([
+    ["Student Union", "1700 W University Dr, Boise, ID 83725"],
+    ["Albertsons Statium", "albertsons stadium"]
+]).forEach(initLocations);
+
+new Map ([
+    ["Walking", "walking"],
+    ["Biking", "cycling"],
+    ["Driving", "driving"],
+    ["Shuttle", "shuttle"]
+]).forEach(initTransport);
 
 /* Resets map interface */
 let resetMap = () => {
@@ -183,6 +196,7 @@ let planTravel = () => {
     const start = markers['start'] ? markers['start'].getLatLng() : null;
     const end = markers['end'] ? markers['end'].getLatLng() : null;
     const arrivalTimeStr = document.getElementById('time').value.trim();
+    const transport = document.getElementById('transport').value;
 
     if (!start || !end || !arrivalTimeStr) {
         showAlert('Please select a start, end location, and desired arrival time.');
@@ -202,7 +216,7 @@ let planTravel = () => {
             L.latLng(end.lat, end.lng) // end coords
         ], 
         router: new L.Routing.mapbox(token, {
-            profile: 'mapbox/driving'
+            profile: `mapbox/${transport}`
         }),
         routeWhileDragging: true,
         show: false
@@ -321,21 +335,29 @@ function notification(message) {
 // HTML ACTIONS
 //+++++++++++++
 
+// TODO: fill drop down lists with location and transport options
+function initLocations(value, key, map) {
+    let startOption = document.createElement('option');
+    let endOption = document.createElement('option');
+
+    startOption.value = value;
+    startOption.innerHTML = key;
+
+    endOption.value = value;
+    endOption.innerHTML = key;
+
+    document.getElementById('start').appendChild(startOption);
+    document.getElementById('end').appendChild(endOption);
+}
+
+function initTransport(value, key, map) {
+    let option = document.createElement('option');
+    option.value = value;
+    option.innerHTML = key;
+    document.getElementById('transport').appendChild(option);
+}
+
 /* Routing between two points if the enter key is pressed */
-document.getElementById('start').addEventListener('keypress', async function(event) {
-    if (event.key === 'Enter') {
-        await getNewLocation(this.value,'start');
-        planTravel();
-    }
-});
-
-document.getElementById('end').addEventListener('keypress', async function(event) {
-    if (event.key === 'Enter') {
-        await getNewLocation(this.value, 'end');
-        planTravel();
-    }
-});
-
 document.getElementById('time').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         planTravel();
@@ -352,15 +374,12 @@ document.getElementById('end').addEventListener('change', async function() {
 });
 
 
-
-
 //++++++++++++++
 // PROGRAM CALLS
 //++++++++++++++
 
 /* Initialize map */
 var map = L.map('map').setView([43.618881, -116.215019], 13);
-var markers = {}; // Declare markers object
 
 /* Import a visual for our map */
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

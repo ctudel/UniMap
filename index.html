@@ -32,18 +32,26 @@
     <div class="main_page">
         <div class="inputs">
             <label for="start">Start Location:</label>
-            <select type="text" id="start" list="addresses" placeholder="Enter start location"></select>
+            <!-- <input type="text" id="start" placeholder="Enter a start location"> -->
+            <!-- TODO: create options for start locations in JS file -->
+            <select id="start" name="start-location-list">
+                <option value="West Portola Drive">Portola</option>
+            </select>
 
             <label for="end">End Location:</label>
-            <select type="text" id="end" list="addresses" placeholder="Enter end location"></select>
+            <!-- <input type="text" id="end" placeholder="Enter an end location"> -->
+            <!-- TODO: create options for end locations in JS file -->
+            <select id="end" name="end-location-list">
+                <option value="Blackeagle Center">Crunch</option>
+            </select>
 
             <label for="transport">Mode of Transport</label>
-            <select id="transport" name="transport-list">
+            <select id="transport" name="transport">
                 <!-- Do this for the other dropdowns above in your JS file -->
-                <option value="walking">Walking</option>
+                <!-- <option value="walking">Walking</option>
                 <option value="driving">Driving</option>
-                <option value="bicycling">Bicycling</option>
-                <option value="shuttle">Shuttle</option>
+                <option value="cycling">Cycling</option>
+                <option value="shuttle">Shuttle</option> -->
             </select>
 
             <label for="time">Arrival Time:</label>
