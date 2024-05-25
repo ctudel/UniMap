@@ -1,6 +1,7 @@
 /* Global styling */
 
 /* Default class and id */
+
 .alert {
     display: none;
     position: fixed;
@@ -30,6 +31,9 @@
 .inputs {
     display: flex;
     gap: 1rem; /* Adds space between each input element */
+    padding: 20px;
+    background-color:#D64309;
+    color:#fff;
 }
 
 .inputs label {
@@ -37,7 +41,7 @@
 }
 
 
-.inputs input {
+.inputs input, select {
     padding: 0.5rem; /* Adds padding inside each input element */
     margin-bottom: 0.5rem; /* Adds space below each input element */
     border: 1px solid #ccc; /* Adds a border to each input element */
@@ -68,9 +72,11 @@
 
 
 /* Desktop scaled window styling */
-@media screen and (max-width: 1000px) {
+@media screen and (max-width: 1151px) {
     .inputs {
         flex-flow: column;
+        background-color: initial;
+        color:#000;
     }
 
     #map {
@@ -95,7 +101,7 @@
     }
     
     
-    .inputs input {
+    .inputs input, select {
         border: 1px solid #ccc; /* Adds a border to each input element */
         border-radius: 4px; /* Adds rounded corners to each input element */
     }
@@ -113,7 +119,7 @@
 
     #map {
         position: relative;
-        top: 310px;
+        top: 43vh;
     }
 }
 
@@ -124,32 +130,28 @@
         background-color: #262626
     }
 
-    .inputs {
-        background-color: #262626;
-    }
-
     .inputs label {
         color: #ffffff
     }
 
-    .inputs input {
+    .inputs input, select {
         color: #ffffff;
         background-color: #6f6f6f;
-    }
-
-    .inputs button {
-        background-color: #ffd500; /* Sets the background color of the button */
-        color: #000; /* Sets the text color of the button */
-        cursor: pointer; /* Changes the cursor to a pointer on hover */
-    }
-
-    .inputs button:hover {
-        background-color: #cdaa00; /* Sets the background color of the button on hover */
     }
 
     @media screen and (max-width: 767px) {
         .inputs {
             background-color: rgba(255, 255, 255, 0);
+        }
+    }
+
+    @media (min-width: 1151px) {
+        .inputs {
+            background-color: #0033A0;
+        }
+
+        .inputs button {
+            background-color: #D64309;
         }
     }
 }
