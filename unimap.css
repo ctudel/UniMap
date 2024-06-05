@@ -1,5 +1,15 @@
 /* Global styling */
 
+.inputs {
+    display: flex;
+    gap: 1rem; /* Adds space between each input element */
+    padding: 20px;
+    font-size: 24px;
+    background-color: #0033A0;
+    color:#fff;
+}
+
+
 /* Default class and id */
 
 .alert {
@@ -28,22 +38,15 @@
     z-index: 9999;
 }  
 
-.inputs {
-    display: flex;
-    gap: 1rem; /* Adds space between each input element */
-    padding: 20px;
-    background-color:#D64309;
-    color:#fff;
-}
-
 .inputs label {
     margin-bottom: 0.5rem; /* Adds space below each label */
 }
 
 
 .inputs input, select {
-    padding: 0.5rem; /* Adds padding inside each input element */
+    padding: 1.5rem; /* Adds padding inside each input element */
     margin-bottom: 0.5rem; /* Adds space below each input element */
+    font-size: 20px;
     border: 1px solid #ccc; /* Adds a border to each input element */
     border-radius: 4px; /* Adds rounded corners to each input element */
 }
@@ -52,7 +55,8 @@
 .inputs button {
     padding: 0.5rem 1rem; /* Adds padding inside the button */
     margin-bottom: 10px;
-    background-color: #007bff; /* Sets the background color of the button */
+    font-size: 24px;
+    background-color: #D64309;
     color: #fff; /* Sets the text color of the button */
     border: none; /* Removes the default button border */
     border-radius: 4px; /* Adds rounded corners to the button */
@@ -72,11 +76,9 @@
 
 
 /* Desktop scaled window styling */
-@media screen and (max-width: 1151px) {
+@media (max-width: 1645px) {
     .inputs {
-        flex-flow: column;
-        background-color: initial;
-        color:#000;
+        flex-direction: column;
     }
 
     #map {
@@ -87,34 +89,26 @@
 
 
 /* Mobile styling */
-@media screen and (max-width:767px) {
+@media (max-width:767px) {
     .inputs {
         position: absolute;
-        width: 90%;
-        top: 0;
+        width: 95%;
         padding: 5px;
+        top: 0;
+    }
+
+    .inputs input, select {
+        padding: 0.5rem;
+        font-size: 12px;
     }
 
     .inputs label {
         margin-bottom: 0;
         font-size: 12px;
     }
-    
-    
-    .inputs input, select {
-        border: 1px solid #ccc; /* Adds a border to each input element */
-        border-radius: 4px; /* Adds rounded corners to each input element */
-    }
-    
-    
+
     .inputs button {
-        padding: 5px;
-        margin-bottom: 0;
-        background-color: #007bff; /* Sets the background color of the button */
-        color: #fff; /* Sets the text color of the button */
-        border: none; /* Removes the default button border */
-        border-radius: 4px; /* Adds rounded corners to the button */
-        cursor: pointer; /* Changes the cursor to a pointer on hover */
+        font-size: 12px;
     }
 
     #map {
@@ -130,28 +124,12 @@
         background-color: #262626
     }
 
-    .inputs label {
-        color: #ffffff
+    .inputs {
+        color: #fff;
     }
 
     .inputs input, select {
-        color: #ffffff;
         background-color: #6f6f6f;
-    }
-
-    @media screen and (max-width: 767px) {
-        .inputs {
-            background-color: rgba(255, 255, 255, 0);
-        }
-    }
-
-    @media (min-width: 1151px) {
-        .inputs {
-            background-color: #0033A0;
-        }
-
-        .inputs button {
-            background-color: #D64309;
-        }
+        color: #fff;
     }
 }
