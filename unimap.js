@@ -4,18 +4,21 @@
 let token = 'pk.eyJ1IjoiY3R1ZGVsIiwiYSI6ImNsd2hkMWl4djA3cTAya29hYmFtZjcxajIifQ.2Ugfx9Y20dpgJgMaFyn5kw';
 let marker, circle, zoomed, routingControl;
 let markers = {};
+
+/* Locations: [<label>, <address>] */
 // TODO: create map for locations
-const locations = new Map([
+new Map([
     ["Student Union", "1700 W University Dr, Boise, ID 83725"],
     ["Albertsons Statium", "albertsons stadium"]
 ]).forEach(initLocations);
 
+/* Transport: [<label>, <transport>] */
 new Map ([
     ["Walking", "walking"],
     ["Biking", "cycling"],
-    ["Driving", "driving"],
-    ["Shuttle", "shuttle"]
+    ["Driving", "driving"]
 ]).forEach(initTransport);
+
 
 /* Resets map interface */
 let resetMap = () => {
@@ -34,6 +37,7 @@ let resetMap = () => {
 
 }
 
+
 /* Finds an address based on latitude and longtitude */
 let reverseGeocode = async (lat, lng) => {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
@@ -50,36 +54,19 @@ let reverseGeocode = async (lat, lng) => {
             return null;
         });
 }
+ 
 
 /* Locates the user's current position if successfully found */
-let success = async (pos) => {
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-    const accuracy = pos.coords.accuracy;
-
-    // Remove old markers if any
-    if (marker) {
-        map.removeLayer(marker);
-        map.removeLayer(circle);
-    }
+let startLocation = async () => {
+    const address = await geocode('1910 W University Dr, Boise, ID 83725');
+    if (!address) return;
 
     // Create a marker
-    marker = L.marker([lat, lng]).addTo(map);
-    circle = L.circle([lat, lng], { radius: accuracy % 500 }).addTo(map);
+    marker = L.marker([address.lat, address.lon]).addTo(map);
+    markers['start'] = marker;
 
-    // Zoom to user's current location
-    if (!zoomed) {
-        // Move the map to the user's location
-        zoomed = map.fitBounds(circle.getBounds());
-
-        // Use reverse geocoding to get the address and set it as the default value of the start location text box
-        const address = await reverseGeocode(lat, lng);
-        if (address) {
-            document.getElementById('start').value = address;
-            markers['start'] = marker;
-            markers['circle'] = circle;
-        }
-    }
+    // Set view to marker
+    map.setView([address.lat, address.lon], 17);
 }
 
 
@@ -124,7 +111,7 @@ let placeMarkerAtCursor = async (e) => {
     const endInput = document.getElementById('end');
 
     // Validate start address does not exist
-    if (startInput.value === '' || startInput.value === ' ') {
+    if (markers['start'] === undefined) {
         placeMarker('start', lat, lng);
 
         const address = await reverseGeocode(lat, lng);
@@ -304,8 +291,8 @@ let scanParsedTime = (hours, minsOrPeriod, period) => {
 }
 
 
-/* Create visual message for user */
-function showAlert(message) {
+/* Create message prompt for user */
+let showAlert = (message) => {
     var alertBox = document.getElementById('alert');
     var alertText = document.getElementById('alert-text');
     alertText.textContent = message;
@@ -318,7 +305,7 @@ function showAlert(message) {
   }
 
 
-function notification(message) {
+let notification = (message) => {
     var notificationBox = document.getElementById('notification');
     var notificationText = document.getElementById('notification-text');
     notificationText.textContent = message;
@@ -336,6 +323,7 @@ function notification(message) {
 //+++++++++++++
 
 // TODO: fill drop down lists with location and transport options
+/* Fill selection list with options from a given map */
 function initLocations(value, key, map) {
     let startOption = document.createElement('option');
     let endOption = document.createElement('option');
@@ -357,14 +345,14 @@ function initTransport(value, key, map) {
     document.getElementById('transport').appendChild(option);
 }
 
-/* Routing between two points if the enter key is pressed */
+/* Route between two points if the enter key is pressed */
 document.getElementById('time').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         planTravel();
     }
 });
 
-/* Detect if a new location is entered and place marker */
+/* Detect if a location option is selected and place marker */
 document.getElementById('start').addEventListener('change', async function() {
     await getNewLocation(this.value, 'start');
 });
@@ -382,26 +370,13 @@ document.getElementById('end').addEventListener('change', async function() {
 var map = L.map('map').setView([43.618881, -116.215019], 13);
 
 /* Import a visual for our map */
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+L.tileLayer.wms('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		maxZoom: 19,
 		attribution: '@MapBox &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 	}).addTo(map);
 
-// Get user's current location and create new marker with it in the map's view
-navigator.geolocation.getCurrentPosition(async function(pos) {
-    var lat = pos.coords.latitude;
-    var lng = pos.coords.longitude;
-    map.setView([lat, lng], 13);
-
-    // Call success function to place marker and set default start location to user's current location
-    await success(pos);
-}, function (err) {
-    if (err === 1) {
-        showAlert("Error: Location access was denied!");
-    } else {
-        showAlert("Error: cannot retrieve current location");
-    }
-});
+/* Get user's current location and create new marker with it in the map's view */
+startLocation();
 
 /* Change location upon user clicks */
 map.on('click', placeMarkerAtCursor);
